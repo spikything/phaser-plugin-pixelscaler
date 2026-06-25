@@ -1,14 +1,14 @@
 {
-  "name": "phaser-plugin-pixelscale",
+  "name": "phaser-plugin-pixelscaler",
   "version": "0.1.0",
   "description": "WebGL post-FX pipeline for Phaser 3 that snaps any scene to a virtual pixel grid, with optional palette quantisation, to render games as pixel art without authoring at a tiny canvas resolution.",
-  "main": "dist/phaser-plugin-pixelscale.umd.js",
-  "module": "dist/phaser-plugin-pixelscale.esm.js",
+  "main": "dist/phaser-plugin-pixelscaler.umd.js",
+  "module": "dist/phaser-plugin-pixelscaler.esm.js",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/phaser-plugin-pixelscale.esm.js",
-      "require": "./dist/phaser-plugin-pixelscale.umd.js"
+      "import": "./dist/phaser-plugin-pixelscaler.esm.js",
+      "require": "./dist/phaser-plugin-pixelscaler.umd.js"
     }
   },
   "files": [
@@ -25,7 +25,7 @@
     "phaser3",
     "plugin",
     "pixel-art",
-    "pixelscale",
+    "pixelscaler",
     "shader",
     "webgl",
     "postfx",
@@ -42,6 +42,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR_GITHUB_USER/phaser-plugin-pixelscale.git"
+    "url": "git+https://github.com/spikything/phaser-plugin-pixelscaler.git"
   }
 }

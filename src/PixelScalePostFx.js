@@ -1,5 +1,5 @@
 /**
- * phaser-plugin-pixelscale
+ * phaser-plugin-pixelscaler
  *
  * WebGL post-FX pipeline that renders a scene at full resolution but
  * snaps the output to a virtual pixel grid, making any Phaser game

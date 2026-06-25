@@ -1,4 +1,4 @@
-# phaser-plugin-pixelscale
+# phaser-plugin-pixelscaler
 
 A WebGL post-FX pipeline for Phaser 3 that snaps a normally-rendered
 scene to a virtual pixel grid - so any game can render at full
@@ -11,13 +11,13 @@ same `setPostPipeline()` API, can be stacked on the same camera.
 ## Install
 
 ```bash
-npm install phaser-plugin-pixelscale
+npm install phaser-plugin-pixelscaler
 ```
 
 Or via CDN script tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/phaser-plugin-pixelscale/dist/phaser-plugin-pixelscale.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser-plugin-pixelscaler/dist/phaser-plugin-pixelscaler.min.js"></script>
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ changes, just removes sub-pixel detail so everything reads as chunky
 pixel art at whatever your real render resolution is.
 
 ```js
-import PixelScalePostFx from "phaser-plugin-pixelscale";
+import PixelScalePostFx from "phaser-plugin-pixelscaler";
 
 // in create()
 this.cameras.main.setPostPipeline(PixelScalePostFx);
