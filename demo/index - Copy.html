@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>phaser-plugin-pixelscaler demo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #0d0d0d;
+        color: #e0e0e0;
+        font-family: monospace;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      #game-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #game-wrap canvas {
+        display: block;
+        image-rendering: pixelated;
+      }
+
+      #panel {
+        width: 260px;
+        min-width: 260px;
+        background: #1a1a1a;
+        border-left: 1px solid #333;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        overflow-y: auto;
+      }
+      .section {
+        padding: 14px 16px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .section h2 {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #666;
+        margin-bottom: 10px;
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 4px;
+      }
+      label span {
+        float: right;
+        color: #fff;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: #4af;
+        margin-bottom: 10px;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        flex: 1;
+        padding: 6px 4px;
+        font-size: 11px;
+        font-family: monospace;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #aaa;
+        cursor: pointer;
+        border-radius: 3px;
+      }
+      .btn.active {
+        background: #4af;
+        border-color: #4af;
+        color: #000;
+      }
+      .btn:hover:not(.active) {
+        border-color: #666;
+        color: #ddd;
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+      }
+      .toggle input {
+        accent-color: #4af;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+      }
+      .toggle span {
+        font-size: 12px;
+        color: #aaa;
+      }
+
+      select {
+        width: 100%;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #ddd;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 5px 6px;
+        border-radius: 3px;
+      }
+
+      #stats {
+        font-size: 11px;
+        line-height: 1.8;
+        color: #888;
+      }
+      #stats strong {
+        color: #4af;
+      }
+
+      #perf-chart {
+        width: 100%;
+        height: 48px;
+        background: #111;
+        border: 1px solid #2a2a2a;
+        margin-top: 8px;
+      }
+
+      #log {
+        font-size: 10px;
+        color: #555;
+        max-height: 80px;
+        overflow-y: auto;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-wrap">
+      <div id="game"></div>
+    </div>
+
+    <div id="panel">
+      <div class="section">
+        <h2>Pipeline</h2>
+        <label>Pixel size: <span id="pixel-size-val">4</span>px</label>
+        <input
+          type="range"
+          id="pixel-size"
+          min="1"
+          max="16"
+          value="4"
+          step="1"
+        />
+
+        <label style="margin-top: 4px">Mode</label>
+        <div class="btn-group">
+          <button class="btn active" data-mode="snap">snap</button>
+          <button class="btn" data-mode="palette">palette</button>
+        </div>
+      </div>
+
+      <div class="section" id="palette-section">
+        <h2>Palette</h2>
+        <label>Preset</label>
+        <select id="palette-select">
+          <option value="pico8">PICO-8 (16)</option>
+          <option value="endesga16">Endesga-16</option>
+          <option value="nes">NES (52)</option>
+          <option value="gb">Game Boy (4)</option>
+        </select>
+        <label class="toggle" style="margin-top: 10px">
+          <input type="checkbox" id="dither" />
+          <span>Bayer 4x4 dither</span>
+        </label>
+      </div>
+
+      <div class="section">
+        <h2>Scene</h2>
+        <div class="btn-group">
+          <button class="btn active" data-scene="plasma">plasma</button>
+          <button class="btn" data-scene="shapes">shapes</button>
+          <button class="btn" data-scene="grid">grid</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Performance</h2>
+        <div id="stats">
+          FPS: <strong id="fps">--</strong><br />
+          Frame: <strong id="frame-ms">--</strong> ms<br />
+          Pixel size: <strong id="stat-px">4</strong>px<br />
+          Mode: <strong id="stat-mode">snap</strong>
+        </div>
+        <canvas id="perf-chart"></canvas>
+      </div>
+
+      <div class="section">
+        <h2>Log</h2>
+        <div id="log"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser-plugin-pixelscaler/dist/phaser-plugin-pixelscaler.umd.js"></script>
+    <script>
+      "use strict";
+
+      // --- Palettes ---
+      const PALETTES = {
+        pico8: [
+          0x000000, 0x1d2b53, 0x7e2553, 0x008751, 0xab5236, 0x5f574f, 0xc2c3c7,
+          0xfff1e8, 0xff004d, 0xffa300, 0xffec27, 0x00e436, 0x29adff, 0x83769c,
+          0xff77a8, 0xffccaa,
+        ],
+        endesga16: [
+          0xe4a672, 0xb86f50, 0x743f39, 0x3f2832, 0x9e2835, 0xe53b44, 0xfb922b,
+          0xffe762, 0x63c64d, 0x327345, 0x193d3f, 0x4f6781, 0xafbfd2, 0xffffff,
+          0xff0044, 0x12071f,
+        ],
+        nes: [
+          0x7c7c7c, 0x0000fc, 0x0000bc, 0x4428bc, 0x940084, 0xa80020, 0xa81000,
+          0x881400, 0x503000, 0x007800, 0x006800, 0x005800, 0x004058, 0x000000,
+          0x000000, 0x000000, 0xbcbcbc, 0x0078f8, 0x0058f8, 0x6844fc, 0xd800cc,
+          0xe40058, 0xf83800, 0xe45c10, 0xac7c00, 0x00b800, 0x00a800, 0x00a844,
+          0x008888, 0x000000, 0x000000, 0x000000, 0xf8f8f8, 0x3cbcfc, 0x6888fc,
+          0x9878f8, 0xf878f8, 0xf85898, 0xf87858, 0xfca044, 0xf8b800, 0xb8f818,
+          0x58d854, 0x58f898, 0x00e8d8, 0x787878, 0x000000, 0x000000, 0xfcfcfc,
+          0xa4e4fc, 0xb8b8f8, 0xd8b8f8, 0xf8b8f8, 0xf8a4c0, 0xf0d0b0, 0xfce0a8,
+          0xf8d878, 0xd8f878, 0xb8f8b8, 0xb8f8d8, 0x00fcfc, 0xf8d8f8, 0x000000,
+          0x000000,
+        ],
+        gb: [0x0f380f, 0x306230, 0x8bac0f, 0x9bbc0f],
+      };
+
+      // --- FPS chart ---
+      const chart = document.getElementById("perf-chart");
+      const ctx2d = chart.getContext("2d");
+      const W = 228,
+        H = 48;
+      chart.width = W;
+      chart.height = H;
+      const fpsSamples = new Array(W).fill(60);
+
+      function pushFps(v) {
+        fpsSamples.push(v);
+        if (fpsSamples.length > W) fpsSamples.shift();
+        ctx2d.clearRect(0, 0, W, H);
+        ctx2d.fillStyle = "#111";
+        ctx2d.fillRect(0, 0, W, H);
+        ctx2d.beginPath();
+        ctx2d.strokeStyle = "#4af";
+        ctx2d.lineWidth = 1;
+        for (let i = 0; i < fpsSamples.length; i++) {
+          const y = H - (fpsSamples[i] / 70) * H;
+          i === 0 ? ctx2d.moveTo(i, y) : ctx2d.lineTo(i, y);
+        }
+        ctx2d.stroke();
+        // 60fps guide line
+        ctx2d.strokeStyle = "#333";
+        ctx2d.beginPath();
+        ctx2d.moveTo(0, H - (60 / 70) * H);
+        ctx2d.lineTo(W, H - (60 / 70) * H);
+        ctx2d.stroke();
+      }
+
+      function log(msg) {
+        const el = document.getElementById("log");
+        el.innerHTML = `<div>${msg}</div>` + el.innerHTML;
+      }
+
+      // --- Plasma fragment shader (runs on GPU - smooth at any resolution) ---
+      const PLASMA_FRAG = `
+precision mediump float;
+uniform float uTime;
+varying vec2 outTexCoord;
+
+vec3 hsv2rgb(float h, float s, float v) {
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(vec3(h) + K.xyz) * 6.0 - K.www);
+    return v * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), s);
+}
+
+void main() {
+    vec2 uv = outTexCoord;
+    float v = sin(uv.x * 8.0 + uTime)
+            + sin(uv.y * 7.0 + uTime * 0.8)
+            + sin((uv.x + uv.y) * 5.0 + uTime * 1.1)
+            + sin(length(uv - 0.5) * 10.0 + uTime * 0.9);
+    float hue = mod((v + 4.0) / 8.0, 1.0);
+    gl_FragColor = vec4(hsv2rgb(hue, 0.85, 0.65), 1.0);
+}
+`;
+
+      // --- Phaser scene ---
+      const { PixelScalerPlugin, PixelScalePostFx } = PhaserPluginPixelScaler;
+
+      let fx = null;
+      let sceneMode = "plasma";
+
+      class DemoScene extends Phaser.Scene {
+        constructor() {
+          super("Demo");
+        }
+
+        create() {
+          const W = this.scale.width,
+            H = this.scale.height;
+
+          // Plasma background - GPU fragment shader, smooth at any resolution.
+          // Uniforms must be declared here so Phaser registers them before first draw.
+          const plasmaShader = new Phaser.Display.BaseShader(
+            "plasma",
+            PLASMA_FRAG,
+            undefined,
+            {
+              uTime: { type: "1f", value: 0.0 },
+            },
+          );
+          this.plasma = this.add.shader(plasmaShader, W / 2, H / 2, W, H);
+
+          // Bouncing shapes layer
+          this.shapes = this.add.group();
+          const colours = [
+            0xff004d, 0xffa300, 0xffec27, 0x00e436, 0x29adff, 0xff77a8,
+            0x83769c, 0xfff1e8,
+          ];
+          this.balls = colours.map((c, i) => {
+            const r = 18 + (i % 3) * 10;
+            const x = Phaser.Math.Between(r, W - r);
+            const y = Phaser.Math.Between(r, H - r);
+            const circle = this.add.circle(x, y, r, c);
+            circle.vx = Phaser.Math.FloatBetween(-120, 120) || 80;
+            circle.vy = Phaser.Math.FloatBetween(-100, 100) || 60;
+            return circle;
+          });
+
+          // Grid overlay (for 'grid' scene mode)
+          this.gridGfx = this.add.graphics();
+
+          // Attach the post-FX pipeline to the main camera
+          this.cameras.main.setPostPipeline("PixelScalePostFx");
+          fx = this.cameras.main.getPostPipeline("PixelScalePostFx");
+          if (fx) {
+            fx.setPixelSize(4);
+            log("Pipeline attached OK");
+          } else {
+            log("ERROR: getPostPipeline returned null - WebGL required");
+          }
+
+          // HUD camera - sits over the main camera with no post-FX so text is always sharp
+          const hudCam = this.cameras.add(0, 0, W, H);
+          hudCam.ignore([this.plasma, this.gridGfx, ...this.balls]);
+
+          this.fpsText = this.add
+            .text(8, 8, "", {
+              fontSize: "11px",
+              fontFamily: "monospace",
+              color: "#ffffff",
+              stroke: "#000000",
+              strokeThickness: 3,
+            })
+            .setDepth(100);
+
+          // Main camera must not render the HUD text (it would get pixelated)
+          this.cameras.main.ignore(this.fpsText);
+
+          this.t = 0;
+        }
+
+        update(time, delta) {
+          const dt = delta / 1000;
+          const W = this.scale.width,
+            H = this.scale.height;
+          this.t = time;
+
+          // --- Scene drawing ---
+          this.plasma.setVisible(sceneMode === "plasma");
+          this.gridGfx.setVisible(sceneMode === "grid");
+          this.balls.forEach((b) => b.setVisible(sceneMode !== "grid"));
+
+          if (sceneMode === "plasma") {
+            this.plasma.setUniform("uTime.value", time * 0.001);
+          } else if (sceneMode === "grid") {
+            this.drawGrid(W, H);
+          }
+
+          // Bounce balls (plasma + shapes modes)
+          if (sceneMode !== "grid") {
+            for (const b of this.balls) {
+              b.x += b.vx * dt;
+              b.y += b.vy * dt;
+              const r = b.radius;
+              if (b.x - r < 0) {
+                b.x = r;
+                b.vx = Math.abs(b.vx);
+              }
+              if (b.x + r > W) {
+                b.x = W - r;
+                b.vx = -Math.abs(b.vx);
+              }
+              if (b.y - r < 0) {
+                b.y = r;
+                b.vy = Math.abs(b.vy);
+              }
+              if (b.y + r > H) {
+                b.y = H - r;
+                b.vy = -Math.abs(b.vy);
+              }
+            }
+          }
+
+          // Stats
+          const fps = Math.round(this.game.loop.actualFps);
+          const ms = this.game.loop.delta.toFixed(1);
+          this.fpsText.setText(`${fps} FPS  ${ms}ms`);
+
+          document.getElementById("fps").textContent = fps;
+          document.getElementById("frame-ms").textContent = ms;
+          pushFps(fps);
+        }
+
+        drawGrid(W, H) {
+          const g = this.gridGfx;
+          g.clear();
+          const step = 8;
+          const colours = [0xff004d, 0xffa300, 0x00e436, 0x29adff, 0xff77a8];
+          let ci = 0;
+          for (let y = 0; y < H; y += step) {
+            for (let x = 0; x < W; x += step) {
+              if ((x / step + y / step) % 2 === 0) {
+                g.fillStyle(colours[ci++ % colours.length]);
+                g.fillRect(x, y, step, step);
+              }
+            }
+          }
+          // Fine diagonal lines to stress-test snapping
+          g.lineStyle(1, 0xffffff, 0.3);
+          for (let i = 0; i < W + H; i += 3) {
+            g.beginPath();
+            g.moveTo(i, 0);
+            g.lineTo(0, i);
+            g.strokePath();
+          }
+        }
+      }
+
+      const game = new Phaser.Game({
+        type: Phaser.WEBGL,
+        width: 640,
+        height: 360,
+        parent: "game",
+        backgroundColor: "#1a1a2e",
+        plugins: {
+          scene: [
+            {
+              key: "PixelScalerPlugin",
+              plugin: PixelScalerPlugin,
+              start: true,
+            },
+          ],
+        },
+        scene: DemoScene,
+      });
+
+      // --- Controls ---
+      const pixelSlider = document.getElementById("pixel-size");
+      const pixelVal = document.getElementById("pixel-size-val");
+      const statPx = document.getElementById("stat-px");
+      const statMode = document.getElementById("stat-mode");
+
+      pixelSlider.addEventListener("input", () => {
+        const v = parseInt(pixelSlider.value, 10);
+        pixelVal.textContent = v;
+        statPx.textContent = v;
+        if (fx) fx.setPixelSize(v);
+      });
+
+      document.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll("[data-mode]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const mode = btn.dataset.mode;
+          statMode.textContent = mode;
+          document.getElementById("palette-section").style.opacity =
+            mode === "palette" ? "1" : "0.4";
+          if (!fx) return;
+          if (mode === "snap") {
+            fx.setMode("snap");
+          } else {
+            applyPalette();
+          }
+          log(`Mode -> ${mode}`);
+        });
+      });
+
+      document.querySelectorAll("[data-scene]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll("[data-scene]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          sceneMode = btn.dataset.scene;
+          log(`Scene -> ${sceneMode}`);
+        });
+      });
+
+      document.getElementById("dither").addEventListener("change", (e) => {
+        if (fx) fx.setDither(e.target.checked);
+        log(`Dither -> ${e.target.checked}`);
+      });
+
+      document
+        .getElementById("palette-select")
+        .addEventListener("change", () => {
+          const activeMode =
+            document.querySelector("[data-mode].active")?.dataset.mode;
+          if (activeMode === "palette") applyPalette();
+        });
+
+      function applyPalette() {
+        if (!fx) return;
+        const key = document.getElementById("palette-select").value;
+        const pal = PALETTES[key];
+        fx.setPalette(pal);
+        const dither = document.getElementById("dither").checked;
+        fx.setDither(dither);
+        log(`Palette -> ${key} (${pal.length} colours)`);
+      }
+    </script>
+  </body>
+</html>

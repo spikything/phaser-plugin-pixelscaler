@@ -1,15 +1,4 @@
-/**
- * phaser-plugin-pixelscaler
- *
- * WebGL post-FX pipeline that renders a scene at full resolution but
- * snaps the output to a virtual pixel grid, making any Phaser game
- * look like native pixel art without authoring at a tiny canvas size.
- *
- * Two modes (switched via uMode uniform - single shader, no runtime swap):
- *  - 'snap'    : nearest-neighbour grid snapping (cheap, sharp edges)
- *  - 'palette' : grid snapping + nearest-colour quantisation against
- *                a fixed palette texture
- */
+import Phaser from 'phaser';
 
 const FRAG = `
 precision mediump float;

@@ -14,13 +14,38 @@ same `setPostPipeline()` API, can be stacked on the same camera.
 npm install phaser-plugin-pixelscaler
 ```
 
-Or via CDN script tag:
+Or via CDN script tag (load after Phaser):
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/phaser-plugin-pixelscaler/dist/phaser-plugin-pixelscaler.min.js"></script>
 ```
 
 ## Usage
+
+### Register the plugin in your game config
+
+The plugin must be registered with the Phaser renderer before you can
+attach it to a camera or game object. Use `PixelScalerPlugin` (a Scene
+Plugin) to do this automatically - it calls `addPostPipeline` in its
+`boot()` hook so you never need to do that yourself.
+
+```js
+import { PixelScalerPlugin } from 'phaser-plugin-pixelscaler';
+
+const config = {
+    type: Phaser.AUTO,
+    // ...
+    plugins: {
+        scene: [{
+            key: 'PixelScalerPlugin',
+            plugin: PixelScalerPlugin,
+            start: true
+        }]
+    }
+};
+
+const game = new Phaser.Game(config);
+```
 
 ### Basic grid-snap mode
 
@@ -29,12 +54,10 @@ changes, just removes sub-pixel detail so everything reads as chunky
 pixel art at whatever your real render resolution is.
 
 ```js
-import PixelScalePostFx from "phaser-plugin-pixelscaler";
-
 // in create()
-this.cameras.main.setPostPipeline(PixelScalePostFx);
+this.cameras.main.setPostPipeline('PixelScalePostFx');
 
-const fx = this.cameras.main.getPostPipeline(PixelScalePostFx);
+const fx = this.cameras.main.getPostPipeline('PixelScalePostFx');
 fx.setPixelSize(4); // each "virtual pixel" = 4 real screen pixels
 ```
 
@@ -45,7 +68,7 @@ the look of an actual limited-colour pixel-art game, regardless of
 how many colours your source art/lighting actually uses.
 
 ```js
-const fx = this.cameras.main.getPostPipeline(PixelScalePostFx);
+const fx = this.cameras.main.getPostPipeline('PixelScalePostFx');
 
 fx.setPalette([
   0x1a1c2c, 0x5d275d, 0xb13e53, 0xef7d57, 0xffcd75, 0xa7f070, 0x38b764,
@@ -60,13 +83,29 @@ fx.setDither(true); // optional 4x4 ordered dithering to soften banding
 ### Applying to a single game object instead of the whole camera
 
 ```js
-sprite.setPostPipeline(PixelScalePostFx);
-const fx = sprite.getPostPipeline(PixelScalePostFx);
+sprite.setPostPipeline('PixelScalePostFx');
+const fx = sprite.getPostPipeline('PixelScalePostFx');
 fx.setPixelSize(2);
 ```
 
 Useful if you want pixel-art sprites composited against
 non-pixelated UI/text in the same scene.
+
+### CDN / script-tag usage
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/phaser/dist/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser-plugin-pixelscaler/dist/phaser-plugin-pixelscaler.min.js"></script>
+<script>
+const { PixelScalerPlugin } = PhaserPluginPixelScaler;
+
+const config = {
+    plugins: {
+        scene: [{ key: 'PixelScalerPlugin', plugin: PixelScalerPlugin, start: true }]
+    }
+};
+</script>
+```
 
 ## API
 
@@ -76,6 +115,16 @@ non-pixelated UI/text in the same scene.
 | `setPixelSize(n)`              | Virtual pixel size, in source pixels                   |
 | `setPalette(hexColours[])`     | Array of hex ints; auto-switches to `'palette'` mode   |
 | `setDither(bool)`              | Toggle 4x4 Bayer ordered dithering (palette mode only) |
+
+## Exports
+
+| Export                  | What it is                                                    |
+| ----------------------- | ------------------------------------------------------------- |
+| `PixelScalerPlugin`     | Scene Plugin - registers the pipeline; use this in game config |
+| `PixelScalePostFx`      | Raw PostFX pipeline class - for advanced / manual use          |
+
+`PixelScalerPlugin.PIPELINE_NAME` is `'PixelScalePostFx'` if you need
+the string key without hardcoding it.
 
 ## Notes
 
