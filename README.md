@@ -8,6 +8,8 @@ authoring at a tiny canvas size or paying for a CPU canvas blit.
 Companion to [phaser-plugin-crt](https://www.npmjs.com/package/phaser-plugin-crt) -
 same `setPostPipeline()` API, can be stacked on the same camera.
 
+<img width="696" height="696" alt="pixelscaler" src="https://github.com/user-attachments/assets/f710445e-c086-459f-bba9-c55d6755127f" />
+
 ## Install
 
 ```bash
