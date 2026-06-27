@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-06-27
+
+### Added
+
+- `index.d.ts` - TypeScript declaration file covering the full public API:
+  `PixelScalePostFx`, `PixelScalerPlugin`, and the `PixelScaleMode` union type.
+  Exported via `"types"` field and the package exports map so bundlers and IDEs
+  pick it up automatically.
+
 ## [0.2.0] - 2026-06-25
 
 ### Fixed
